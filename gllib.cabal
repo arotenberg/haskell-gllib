@@ -1,0 +1,45 @@
+name:                gllib
+version:             0.1.0.0
+synopsis:            Utilities for working with the Haskell bindings to OpenGL
+description:         Please see README.md
+homepage:            https://github.com/arotenberg/haskell-gllib#readme
+license:             Apache-2.0
+license-file:        LICENSE
+author:              Aaron Rotenberg
+maintainer:          adrotenberg (at) gmail.com
+copyright:           2017 Aaron Rotenberg
+category:            Graphics
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     GLLib.Application
+                     , GLLib.Mesh
+                     , GLLib.Program
+                     , GLLib.Texture
+                     , GLLib.Utils
+                     , GLLib.Vec
+  build-depends:       base >= 4.7 && < 5
+                     , bytestring == 0.10.*
+                     , containers == 0.5.*
+                     , GLFW-b == 1.4.*
+                     , json == 0.9.*
+                     , JuicyPixels == 3.2.*
+                     , OpenGLRaw == 2.6.*
+                     , split == 0.2.*
+                     , StateVar == 1.1.*
+                     , tagged == 0.8.*
+  default-language:    Haskell2010
+  other-extensions:    BangPatterns
+                     , FlexibleContexts
+                     , RankNTypes
+                     , ScopedTypeVariables
+                     , TypeFamilies
+                     , TypeSynonymInstances
+  ghc-options:         -W
+
+source-repository head
+  type:     git
+  location: https://github.com/arotenberg/haskell-gllib

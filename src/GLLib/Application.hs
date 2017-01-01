@@ -6,11 +6,11 @@ module GLLib.Application(
 ) where
 
 import Control.Monad
-import Data.IORef
+import Data.IORef(IORef, newIORef)
 import Data.Maybe(fromMaybe)
 import Data.Proxy(Proxy(..))
+import Data.StateVar
 import Data.Tagged(Tagged(..), proxy)
-import Graphics.Rendering.OpenGL.GL.StateVar
 import qualified Graphics.UI.GLFW as GLFW
 import Text.Printf(printf)
 
