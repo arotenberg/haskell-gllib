@@ -6,7 +6,7 @@
 module GLLib.Vec where
 
 import Data.List(foldl')
-import Graphics.Rendering.OpenGL.Raw(GLfloat)
+import Graphics.GL
 
 infixl 6 ^+^, ^-^
 infixr 7 *^, ^/, <.>, ^@, ^.^

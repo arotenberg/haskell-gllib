@@ -1,9 +1,8 @@
-resolver: lts-3.22
+resolver: lts-8.12
 packages:
 - '.'
 extra-deps:
-- bindings-GLFW-3.1.1.4
-- GLFW-b-1.4.7.3
-- OpenGLRaw-2.6.1.1
+- bindings-GLFW-3.1.2.2
+- GLFW-b-1.4.8.1
 flags: {}
 extra-package-dbs: []

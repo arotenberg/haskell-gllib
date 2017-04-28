@@ -1,6 +1,6 @@
 module GLLib(
     module Data.StateVar,
-    module Graphics.Rendering.OpenGL.Raw,
+    module Graphics.GL,
     module GLLib.Application,
     module GLLib.Mesh,
     module GLLib.Program,
@@ -10,7 +10,7 @@ module GLLib(
 ) where
 
 import Data.StateVar
-import Graphics.Rendering.OpenGL.Raw
+import Graphics.GL
 import GLLib.Application
 import GLLib.Mesh
 import GLLib.Program

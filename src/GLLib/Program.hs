@@ -15,7 +15,7 @@ import qualified Data.Map as Map
 import Foreign.C.String(peekCAString)
 import Foreign.Marshal.Alloc(allocaBytes)
 import Foreign.Ptr(Ptr, nullPtr)
-import Graphics.Rendering.OpenGL.Raw
+import Graphics.GL
 
 import GLLib.Utils
 import GLLib.Vec
@@ -54,21 +54,21 @@ assembleIDArray pID names glFunc = do
 
 createProgramFromSource :: B.ByteString -> B.ByteString -> IO GLuint
 createProgramFromSource vertexShaderSource fragmentShaderSource = do
-    vertexShaderID <- createShaderFromSource gl_VERTEX_SHADER vertexShaderSource
-    fragmentShaderID <- createShaderFromSource gl_FRAGMENT_SHADER fragmentShaderSource
+    vertexShaderID <- createShaderFromSource GL_VERTEX_SHADER vertexShaderSource
+    fragmentShaderID <- createShaderFromSource GL_FRAGMENT_SHADER fragmentShaderSource
     
     programID <- glCreateProgram
     glAttachShader programID vertexShaderID
     glAttachShader programID fragmentShaderID
     glLinkProgram programID
     
-    checkInfoLog programID glGetProgramiv glGetProgramInfoLog gl_LINK_STATUS
+    checkInfoLog programID glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS
     
     glDeleteShader vertexShaderID
     glDeleteShader fragmentShaderID
     
     isProgram <- glIsProgram programID
-    when (fromIntegral isProgram /= gl_TRUE) $
+    when (fromIntegral isProgram /= GL_TRUE) $
         error "Loading shader program failed in some unspecified manner..."
     
     return programID
@@ -85,20 +85,20 @@ createShaderFromSource shaderType shaderSource = do
             -- string immediately after that call.
     
     glCompileShader shaderID
-    checkInfoLog shaderID glGetShaderiv glGetShaderInfoLog gl_COMPILE_STATUS
+    checkInfoLog shaderID glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS
     return shaderID
 
 checkInfoLog :: GLuint -> (GLuint -> GLenum -> Ptr GLint -> IO ()) ->
     (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> IO ()
 checkInfoLog objectID getiv getInfoLog statusType = do
-    infoLogLength <- allocaOut $ getiv objectID gl_INFO_LOG_LENGTH
-    -- gl_INFO_LOG_LENGTH includes the NUL character.
+    infoLogLength <- allocaOut $ getiv objectID GL_INFO_LOG_LENGTH
+    -- GL_INFO_LOG_LENGTH includes the NUL character.
     when (infoLogLength > 1) $ do
         msg <- allocaBytes  (fromIntegral infoLogLength) $ \msgPtr -> do
             getInfoLog objectID infoLogLength nullPtr msgPtr
             peekCAString msgPtr
         compileStatus <- allocaOut $ getiv objectID statusType
-        if fromIntegral compileStatus /= gl_TRUE then error msg else putStrLn msg
+        if fromIntegral compileStatus /= GL_TRUE then error msg else putStrLn msg
 
 -- | @GLSampler textureType textureID textureUnitNum@
 data GLSampler = GLSampler !GLenum !GLuint !GLint
@@ -120,14 +120,14 @@ instance GLValueType Mat2 where
             -- Column-major order since transpose is false.
             m11, m21,
             m12, m22
-          ] $ glUniformMatrix2fv location 1 (fromIntegral gl_FALSE)
+          ] $ glUniformMatrix2fv location 1 (fromIntegral GL_FALSE)
 instance GLValueType Mat3 where
     setUniformImpl location (Mat3 (Vec3 m11 m21 m31) (Vec3 m12 m22 m32) (Vec3 m13 m23 m33)) =
         allocaInArray [
             m11, m21, m31,
             m12, m22, m32,
             m13, m23, m33
-          ] $ glUniformMatrix3fv location 1 (fromIntegral gl_FALSE)
+          ] $ glUniformMatrix3fv location 1 (fromIntegral GL_FALSE)
 instance GLValueType Mat4 where
     setUniformImpl location (Mat4 (Vec4 m11 m21 m31 m41) (Vec4 m12 m22 m32 m42)
             (Vec4 m13 m23 m33 m43) (Vec4 m14 m24 m34 m44)) =
@@ -136,10 +136,10 @@ instance GLValueType Mat4 where
             m12, m22, m32, m42,
             m13, m23, m33, m43,
             m14, m24, m34, m44
-          ] $ glUniformMatrix4fv location 1 (fromIntegral gl_FALSE)
+          ] $ glUniformMatrix4fv location 1 (fromIntegral GL_FALSE)
 instance GLValueType GLSampler where
     setUniformImpl location (GLSampler textureType textureID textureUnitNum) = do
-        glActiveTexture (gl_TEXTURE0 + fromIntegral textureUnitNum)
+        glActiveTexture (GL_TEXTURE0 + fromIntegral textureUnitNum)
         glBindTexture textureType textureID
         glUniform1i location textureUnitNum
 
@@ -160,6 +160,6 @@ setUniform (ActiveProgram prog) key value = do
 
 bindVertexAttribBuffer :: Ord a => ActiveProgram u a -> a -> GLuint -> GLint -> GLenum -> IO ()
 bindVertexAttribBuffer (ActiveProgram prog) key bufferID dataSize dataType = do
-    glBindBuffer gl_ARRAY_BUFFER bufferID
+    glBindBuffer GL_ARRAY_BUFFER bufferID
     let attribID = programAttribIDs prog Map.! key
-    glVertexAttribPointer attribID dataSize dataType (fromIntegral gl_FALSE) 0 nullPtr
+    glVertexAttribPointer attribID dataSize dataType (fromIntegral GL_FALSE) 0 nullPtr

@@ -8,7 +8,7 @@ import Foreign.C.String(peekCAString, withCAString)
 import Foreign.Marshal.Alloc(alloca, allocaBytes)
 import Foreign.Ptr(Ptr, castPtr)
 import Foreign.Storable
-import Graphics.Rendering.OpenGL.Raw
+import Graphics.GL
 import qualified Graphics.UI.GLFW as GLFW
 
 -- | @allocaIn x f@ allocates a temporary block of memory, initializes it to a value of @x@,
@@ -59,9 +59,9 @@ getLoc = flip withCAString
 
 getSupportedOpenGLExtensions :: IO (Set.Set String)
 getSupportedOpenGLExtensions = do
-    numExts <- allocaOut (glGetIntegerv gl_NUM_EXTENSIONS)
+    numExts <- allocaOut (glGetIntegerv GL_NUM_EXTENSIONS)
     exts <- forM [0..fromIntegral numExts - 1] $ \index -> do
-        namePtr <- glGetStringi gl_EXTENSIONS index
+        namePtr <- glGetStringi GL_EXTENSIONS index
         peekCAString (castPtr namePtr)
     return $ Set.fromList exts
 

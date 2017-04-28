@@ -19,7 +19,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Foreign.Ptr(nullPtr)
 import Foreign.Storable(Storable, sizeOf)
-import Graphics.Rendering.OpenGL.Raw
+import Graphics.GL
 import qualified Text.JSON as JSON
 
 import GLLib.Program
@@ -46,17 +46,17 @@ newtype ActiveMesh a = ActiveMesh (Mesh a)
 
 bindMesh :: Ord a => ActiveProgram u a -> Mesh a -> (ActiveMesh a -> IO ()) -> IO ()
 bindMesh activeProg@(ActiveProgram prog) mesh callback = do
-    glBindBuffer gl_ELEMENT_ARRAY_BUFFER (meshBufferID $ meshVertexIndices $ mesh)
+    glBindBuffer GL_ELEMENT_ARRAY_BUFFER (meshBufferID $ meshVertexIndices $ mesh)
     forM_ (Map.keys $ programAttribIDs prog) $ \attribKey -> do
         let attribBuffer = meshVertexAttribs mesh Map.! attribKey
         bindVertexAttribBuffer activeProg attribKey (meshBufferID attribBuffer)
-            (meshBufferStride attribBuffer) gl_FLOAT
+            (meshBufferStride attribBuffer) GL_FLOAT
     callback (ActiveMesh mesh)
 
 drawMesh :: ActiveMesh a -> IO ()
 drawMesh (ActiveMesh mesh) = do
     let vertexCount = meshBufferCount (meshVertexIndices mesh)
-    glDrawElements gl_TRIANGLES vertexCount gl_UNSIGNED_INT nullPtr
+    glDrawElements GL_TRIANGLES vertexCount GL_UNSIGNED_INT nullPtr
 
 readMeshFromJSONFile :: Ord a => [(a, String, GLint)] -> FilePath -> IO (Mesh a)
 readMeshFromJSONFile attribNames = readFile >=> meshFromJSON attribNames
@@ -68,9 +68,9 @@ meshFromJSON attribNames jsonString =
         JSON.Ok obj -> do
             let objAList = JSON.fromJSObject obj
             vertexIndices <-
-                bufferJSONData objAList vertexIndicesField gl_ELEMENT_ARRAY_BUFFER UIntType 1
+                bufferJSONData objAList vertexIndicesField GL_ELEMENT_ARRAY_BUFFER UIntType 1
             attribBuffers <- forM attribNames $ \(attribKey, attribName, attribStride) -> do
-                buffer <- bufferJSONData objAList attribName gl_ARRAY_BUFFER FloatType attribStride
+                buffer <- bufferJSONData objAList attribName GL_ARRAY_BUFFER FloatType attribStride
                 return (attribKey, buffer)
             return Mesh {
                 meshVertexIndices = vertexIndices,
@@ -103,7 +103,7 @@ bufferData target stride arrayData = do
     let dataLength = length arrayData
         dataSize = fromIntegral dataLength * fromIntegral (sizeOf (undefined :: a)) :: GLsizeiptr
     allocaInArray arrayData $ \ptr ->
-        glBufferData target dataSize ptr gl_STATIC_DRAW
+        glBufferData target dataSize ptr GL_STATIC_DRAW
     return MeshBuffer {
         meshBufferCount = fromIntegral dataLength,
         meshBufferID = bufferID,
@@ -116,10 +116,10 @@ writeMeshToJSONFile filePath attribs = meshToJSON attribs >=> writeFile filePath
 meshToJSON :: Ord a => [(a, String)] -> Mesh a -> IO String
 meshToJSON attribs mesh = do
     vertexIndicesValue <- meshBufferToJSValue
-        gl_ELEMENT_ARRAY_BUFFER UIntType (meshVertexIndices mesh)
+        GL_ELEMENT_ARRAY_BUFFER UIntType (meshVertexIndices mesh)
     vertexAttribValues <- forM attribs $ \(attribKey, attribName) -> do
         let buffer = meshVertexAttribs mesh Map.! attribKey
-        bufferValue <- meshBufferToJSValue gl_ARRAY_BUFFER FloatType buffer
+        bufferValue <- meshBufferToJSValue GL_ARRAY_BUFFER FloatType buffer
         return (attribName, bufferValue)
     return $ JSON.encode $ JSON.toJSObject $
         (vertexIndicesField, vertexIndicesValue) : vertexAttribValues
@@ -166,9 +166,9 @@ parseOBJLine st _ = st
 
 reassembleLines :: OBJState -> IO (Mesh StandardAttrib)
 reassembleLines st = do
-    vertexIndices <- bufferData gl_ELEMENT_ARRAY_BUFFER 1 indicesList
+    vertexIndices <- bufferData GL_ELEMENT_ARRAY_BUFFER 1 indicesList
     attribs <- forM objAttribs $ \(attribName, attribStride, extractFunc) -> do
-        attribBuffer <- bufferData gl_ARRAY_BUFFER attribStride $ concatMap (extractFunc st) $ toList vertsSet
+        attribBuffer <- bufferData GL_ARRAY_BUFFER attribStride $ concatMap (extractFunc st) $ toList vertsSet
         return (attribName, attribBuffer)
     return Mesh {
         meshVertexIndices = vertexIndices,

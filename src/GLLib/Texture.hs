@@ -14,7 +14,7 @@ import Control.Monad(forM_, when)
 import Foreign.Marshal.Alloc(allocaBytes)
 import Foreign.Ptr(Ptr)
 import Foreign.Storable(peekByteOff, pokeByteOff)
-import Graphics.Rendering.OpenGL.Raw
+import Graphics.GL
 
 import GLLib.Utils
 
@@ -31,8 +31,8 @@ data TextureFormat p = TextureFormat {
 rgb8TextureFormat :: TextureFormat PixelRGB8
 rgb8TextureFormat = TextureFormat {
     tfBytesPerPixel = 3,
-    tfGLPixelFormat = gl_RGB,
-    tfGLPixelInternalFormat = \cs -> case cs of { LinearColorSpace -> gl_RGB8; SRGBColorSpace -> gl_SRGB8 },
+    tfGLPixelFormat = GL_RGB,
+    tfGLPixelInternalFormat = \cs -> case cs of { LinearColorSpace -> GL_RGB8; SRGBColorSpace -> GL_SRGB8 },
     tfCreateImage = ImageRGB8,
     tfExtractImage = \dynImg -> case dynImg of { ImageRGB8 img -> Just img; _ -> Nothing },
     tfReadPixel = \ptr baseOffset -> do
@@ -49,8 +49,8 @@ rgb8TextureFormat = TextureFormat {
 rgba8TextureFormat :: TextureFormat PixelRGBA8
 rgba8TextureFormat = TextureFormat {
     tfBytesPerPixel = 4,
-    tfGLPixelFormat = gl_RGBA,
-    tfGLPixelInternalFormat = \cs -> case cs of { LinearColorSpace -> gl_RGBA8; SRGBColorSpace -> gl_SRGB8_ALPHA8 },
+    tfGLPixelFormat = GL_RGBA,
+    tfGLPixelInternalFormat = \cs -> case cs of { LinearColorSpace -> GL_RGBA8; SRGBColorSpace -> GL_SRGB8_ALPHA8 },
     tfCreateImage = ImageRGBA8,
     tfExtractImage = \dynImg -> case dynImg of { ImageRGBA8 img -> Just img; _ -> Nothing },
     tfReadPixel = \ptr baseOffset -> do
@@ -75,16 +75,16 @@ readTexture filePath tf colorSpace magFilter minFilter wrapS wrapT generateMipma
     image <- readRequiredImage tf filePath
     
     textureID <- gen glGenTextures
-    glBindTexture gl_TEXTURE_2D textureID
+    glBindTexture GL_TEXTURE_2D textureID
     
-    uploadTexture tf colorSpace gl_TEXTURE_2D 0 image
+    uploadTexture tf colorSpace GL_TEXTURE_2D 0 image
     
-    glTexParameteri gl_TEXTURE_2D gl_TEXTURE_MAG_FILTER (fromIntegral magFilter)
-    glTexParameteri gl_TEXTURE_2D gl_TEXTURE_MIN_FILTER (fromIntegral minFilter)
-    glTexParameteri gl_TEXTURE_2D gl_TEXTURE_WRAP_S (fromIntegral wrapS)
-    glTexParameteri gl_TEXTURE_2D gl_TEXTURE_WRAP_T (fromIntegral wrapT)
+    glTexParameteri GL_TEXTURE_2D GL_TEXTURE_MAG_FILTER (fromIntegral magFilter)
+    glTexParameteri GL_TEXTURE_2D GL_TEXTURE_MIN_FILTER (fromIntegral minFilter)
+    glTexParameteri GL_TEXTURE_2D GL_TEXTURE_WRAP_S (fromIntegral wrapS)
+    glTexParameteri GL_TEXTURE_2D GL_TEXTURE_WRAP_T (fromIntegral wrapT)
     when generateMipmap $
-        glGenerateMipmap gl_TEXTURE_2D
+        glGenerateMipmap GL_TEXTURE_2D
     
     return textureID
 
@@ -92,18 +92,18 @@ data CubeMapFace = PosXFace | NegXFace | PosYFace | NegYFace | PosZFace | NegZFa
     deriving (Show, Eq, Ord, Bounded, Enum)
 
 cubeMapFaceToGLTarget :: CubeMapFace -> GLenum
-cubeMapFaceToGLTarget PosXFace = gl_TEXTURE_CUBE_MAP_POSITIVE_X
-cubeMapFaceToGLTarget NegXFace = gl_TEXTURE_CUBE_MAP_NEGATIVE_X
-cubeMapFaceToGLTarget PosYFace = gl_TEXTURE_CUBE_MAP_POSITIVE_Y
-cubeMapFaceToGLTarget NegYFace = gl_TEXTURE_CUBE_MAP_NEGATIVE_Y
-cubeMapFaceToGLTarget PosZFace = gl_TEXTURE_CUBE_MAP_POSITIVE_Z
-cubeMapFaceToGLTarget NegZFace = gl_TEXTURE_CUBE_MAP_NEGATIVE_Z
+cubeMapFaceToGLTarget PosXFace = GL_TEXTURE_CUBE_MAP_POSITIVE_X
+cubeMapFaceToGLTarget NegXFace = GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+cubeMapFaceToGLTarget PosYFace = GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+cubeMapFaceToGLTarget NegYFace = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+cubeMapFaceToGLTarget PosZFace = GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+cubeMapFaceToGLTarget NegZFace = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 
 readCubeMapTexture :: Pixel p => [(CubeMapFace, FilePath)] -> TextureFormat p ->
     ColorSpace -> GLenum -> GLenum -> Bool -> IO GLuint
 readCubeMapTexture filePaths tf colorSpace magFilter minFilter generateMipmap = do
     textureID <- gen glGenTextures
-    glBindTexture gl_TEXTURE_CUBE_MAP textureID
+    glBindTexture GL_TEXTURE_CUBE_MAP textureID
     
     forM_ filePaths $ \(face, filePath) -> do
         image <- readRequiredImage tf filePath
@@ -111,14 +111,14 @@ readCubeMapTexture filePaths tf colorSpace magFilter minFilter generateMipmap = 
     
     configureCubeMapTexParameters magFilter minFilter
     when generateMipmap $
-        glGenerateMipmap gl_TEXTURE_CUBE_MAP
+        glGenerateMipmap GL_TEXTURE_CUBE_MAP
     return textureID
 
 readMipmappedCubeMapTexture :: Pixel p => (CubeMapFace -> GLint -> FilePath) -> TextureFormat p ->
     ColorSpace -> GLenum -> GLenum -> GLint -> IO GLuint
 readMipmappedCubeMapTexture filePathFunc tf colorSpace magFilter minFilter maxMipmapLevel = do
     textureID <- gen glGenTextures
-    glBindTexture gl_TEXTURE_CUBE_MAP textureID
+    glBindTexture GL_TEXTURE_CUBE_MAP textureID
     
     forM_ [minBound..maxBound :: CubeMapFace] $ \face ->
         forM_ [0..maxMipmapLevel] $ \mipmapLevel -> do
@@ -131,12 +131,12 @@ readMipmappedCubeMapTexture filePathFunc tf colorSpace magFilter minFilter maxMi
 
 configureCubeMapTexParameters :: GLenum -> GLenum -> IO ()
 configureCubeMapTexParameters magFilter minFilter = do
-    glTexParameteri gl_TEXTURE_CUBE_MAP gl_TEXTURE_MAG_FILTER (fromIntegral magFilter)
-    glTexParameteri gl_TEXTURE_CUBE_MAP gl_TEXTURE_MIN_FILTER (fromIntegral minFilter)
-    -- These are ignored if gl_TEXTURE_CUBE_MAP_SEAMLESS is on, but are important if it is off.
-    glTexParameteri gl_TEXTURE_CUBE_MAP gl_TEXTURE_WRAP_S (fromIntegral gl_CLAMP_TO_EDGE)
-    glTexParameteri gl_TEXTURE_CUBE_MAP gl_TEXTURE_WRAP_T (fromIntegral gl_CLAMP_TO_EDGE)
-    glTexParameteri gl_TEXTURE_CUBE_MAP gl_TEXTURE_WRAP_R (fromIntegral gl_CLAMP_TO_EDGE)
+    glTexParameteri GL_TEXTURE_CUBE_MAP GL_TEXTURE_MAG_FILTER (fromIntegral magFilter)
+    glTexParameteri GL_TEXTURE_CUBE_MAP GL_TEXTURE_MIN_FILTER (fromIntegral minFilter)
+    -- These are ignored if GL_TEXTURE_CUBE_MAP_SEAMLESS is on, but are important if it is off.
+    glTexParameteri GL_TEXTURE_CUBE_MAP GL_TEXTURE_WRAP_S (fromIntegral GL_CLAMP_TO_EDGE)
+    glTexParameteri GL_TEXTURE_CUBE_MAP GL_TEXTURE_WRAP_T (fromIntegral GL_CLAMP_TO_EDGE)
+    glTexParameteri GL_TEXTURE_CUBE_MAP GL_TEXTURE_WRAP_R (fromIntegral GL_CLAMP_TO_EDGE)
 
 readRequiredImage :: TextureFormat p -> FilePath -> IO (Image p)
 readRequiredImage tf filePath = do
@@ -162,12 +162,12 @@ uploadTexture tf colorSpace target mipmapLevel image = do
                     baseOffset = (destY * width + x) * tfBytesPerPixel tf
                 tfWritePixel tf ptr baseOffset pixel
         glTexImage2D target mipmapLevel (fromIntegral (tfGLPixelInternalFormat tf colorSpace))
-            (fromIntegral width) (fromIntegral height) 0 (tfGLPixelFormat tf) gl_UNSIGNED_BYTE ptr
+            (fromIntegral width) (fromIntegral height) 0 (tfGLPixelFormat tf) GL_UNSIGNED_BYTE ptr
 
 writeActiveFramebufferAsPNG :: Pixel p => FilePath -> TextureFormat p -> GLsizei -> GLsizei -> IO ()
 writeActiveFramebufferAsPNG filePath tf width height = do
     allocaBytes (fromIntegral width * fromIntegral height * tfBytesPerPixel tf) $ \ptr -> do
-        glReadPixels 0 0 width height (tfGLPixelFormat tf) gl_UNSIGNED_BYTE ptr
+        glReadPixels 0 0 width height (tfGLPixelFormat tf) GL_UNSIGNED_BYTE ptr
         image <- withImage (fromIntegral width) (fromIntegral height) $ \x destY -> do
             let srcY = (fromIntegral height - 1) - destY
                 baseOffset = (srcY * fromIntegral width + x) * tfBytesPerPixel tf
