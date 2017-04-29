@@ -2,6 +2,7 @@ module GLLib(
     module Data.StateVar,
     module Graphics.GL,
     module GLLib.Application,
+    module GLLib.GLFW,
     module GLLib.Mesh,
     module GLLib.Program,
     module GLLib.Texture,
@@ -12,6 +13,7 @@ module GLLib(
 import Data.StateVar
 import Graphics.GL
 import GLLib.Application
+import GLLib.GLFW
 import GLLib.Mesh
 import GLLib.Program
 import GLLib.Texture

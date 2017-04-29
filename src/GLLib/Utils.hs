@@ -9,7 +9,6 @@ import Foreign.Marshal.Alloc(alloca, allocaBytes)
 import Foreign.Ptr(Ptr, castPtr)
 import Foreign.Storable
 import Graphics.GL
-import qualified Graphics.UI.GLFW as GLFW
 
 -- | @allocaIn x f@ allocates a temporary block of memory, initializes it to a value of @x@,
 -- executes the computation @f@ passing it a pointer to the temporary block, and finally frees the
@@ -64,6 +63,3 @@ getSupportedOpenGLExtensions = do
         namePtr <- glGetStringi GL_EXTENSIONS index
         peekCAString (castPtr namePtr)
     return $ Set.fromList exts
-
-isKeyPressed :: GLFW.Window -> GLFW.Key -> IO Bool
-isKeyPressed window key = (== GLFW.KeyState'Pressed) `liftM` GLFW.getKey window key

@@ -5,6 +5,7 @@ module GLLib.Application(
     runGLApplication
 ) where
 
+import Control.Exception(finally)
 import Control.Monad
 import Data.IORef(IORef, newIORef)
 import Data.Maybe(fromMaybe)
@@ -13,6 +14,8 @@ import Data.StateVar
 import Data.Tagged(Tagged(..), proxy)
 import qualified Graphics.UI.GLFW as GLFW
 import Text.Printf(printf)
+
+import GLLib.GLFW
 
 class Scene ss where
     sceneWindowTitle :: Tagged ss String
@@ -29,32 +32,19 @@ class Scene ss where
                 GLFW.Key'Escape -> GLFW.setWindowShouldClose window True
                 _ -> return ()
 
-defaultWidth, defaultHeight :: Int
-defaultWidth = 1366
-defaultHeight = 768
 secondsPerBatch :: Double
 secondsPerBatch = 1.0
 
 runGLApplication :: forall ss. Scene ss => Tagged ss (IO ())
-runGLApplication = Tagged $ do
-    GLFW.setErrorCallback $ Just $ \err desc ->
-        putStrLn $ show err ++ ": " ++ desc
-    initSuccess <- GLFW.init
-    when initSuccess $ do
-        GLFW.windowHint (GLFW.WindowHint'sRGBCapable True)
-        let windowTitle = proxy sceneWindowTitle (Proxy :: Proxy ss)
-        maybeWindow <- GLFW.createWindow defaultWidth defaultHeight windowTitle Nothing Nothing
-        case maybeWindow of
-            Nothing -> return ()
-            Just window -> do
-                GLFW.makeContextCurrent (Just window)
-                GLFW.swapInterval 1
-                gs <- mainInit window :: IO (GlobalState ss)
-                GLFW.setKeyCallback window $ Just $ sceneKeyCallback $ gsSceneState gs
-                mainLoop gs
-                mainDispose gs
-                GLFW.destroyWindow window
-        GLFW.terminate
+runGLApplication = Tagged $ flip finally GLFW.terminate $ do
+    window <- simpleGLFWInit
+    let windowTitle = proxy sceneWindowTitle (Proxy :: Proxy ss)
+    GLFW.setWindowTitle window windowTitle
+    gs <- mainInit window :: IO (GlobalState ss)
+    GLFW.setKeyCallback window $ Just $ sceneKeyCallback $ gsSceneState gs
+    mainLoop gs
+    mainDispose gs
+    GLFW.destroyWindow window
 
 data GlobalState ss = GlobalState {
     gsWindow :: !GLFW.Window,

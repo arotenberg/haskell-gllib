@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     GLLib
                      , GLLib.Application
+                     , GLLib.GLFW
                      , GLLib.Mesh
                      , GLLib.Program
                      , GLLib.Texture
