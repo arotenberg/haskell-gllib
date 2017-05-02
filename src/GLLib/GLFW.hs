@@ -1,10 +1,15 @@
 module GLLib.GLFW(
+    finallyTerminateGLFW,
     simpleGLFWInit,
     isKeyPressed
 ) where
 
+import Control.Exception(finally)
 import Control.Monad
 import qualified Graphics.UI.GLFW as GLFW
+
+finallyTerminateGLFW :: IO a -> IO a
+finallyTerminateGLFW = (`finally` GLFW.terminate)
 
 defaultWidth, defaultHeight :: Int
 defaultWidth = 800

@@ -36,7 +36,7 @@ secondsPerBatch :: Double
 secondsPerBatch = 1.0
 
 runGLApplication :: forall ss. Scene ss => Tagged ss (IO ())
-runGLApplication = Tagged $ flip finally GLFW.terminate $ do
+runGLApplication = Tagged $ finallyTerminateGLFW $ do
     window <- simpleGLFWInit
     let windowTitle = proxy sceneWindowTitle (Proxy :: Proxy ss)
     GLFW.setWindowTitle window windowTitle
