@@ -4,6 +4,8 @@ module GLLib(
     module GLLib.Application,
     module GLLib.GLFW,
     module GLLib.Mesh,
+    module GLLib.Mesh.JSON,
+    module GLLib.Mesh.OBJ,
     module GLLib.Program,
     module GLLib.Texture,
     module GLLib.Utils,
@@ -15,6 +17,8 @@ import Graphics.GL
 import GLLib.Application
 import GLLib.GLFW
 import GLLib.Mesh
+import GLLib.Mesh.JSON
+import GLLib.Mesh.OBJ
 import GLLib.Program
 import GLLib.Texture
 import GLLib.Utils

@@ -19,6 +19,8 @@ library
                      , GLLib.Application
                      , GLLib.GLFW
                      , GLLib.Mesh
+                     , GLLib.Mesh.JSON
+                     , GLLib.Mesh.OBJ
                      , GLLib.Program
                      , GLLib.Texture
                      , GLLib.Utils
